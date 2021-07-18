@@ -33,6 +33,7 @@ dependencies {
 	implementation group: 'com.jsoniter', name: 'jsoniter', version: '0.9.23'
 	implementation(name:'RewardCentral', ext:'jar')
 	implementation(name:'TripPricer', ext:'jar')
+	implementation(name:'gpsUtil', ext:'jar')
 	testImplementation("junit:junit")
 	testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '2.1.6.RELEASE'
 }
