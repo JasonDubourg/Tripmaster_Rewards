@@ -32,6 +32,9 @@ public class RewardsController {
 
     @GetMapping(value = "/getTripDeals")
     public List<Provider> getTripDeals(@RequestParam("userName") String userName){
-         return rewardsService.getTripDeals(userName);
+        UserDatabase userDatabase = new UserDatabase();
+        userDatabase.initializeUserDatabase();
+        User user = userDatabase.getUser(userName);
+         return rewardsService.getTripDeals(user);
     };
 }

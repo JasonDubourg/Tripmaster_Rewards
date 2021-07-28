@@ -7,27 +7,21 @@ import gpsUtil.GpsUtil;
 import gpsUtil.location.Attraction;
 import gpsUtil.location.Location;
 import gpsUtil.location.VisitedLocation;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import rewardCentral.RewardCentral;
 import tripPricer.Provider;
 import tripPricer.TripPricer;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class RewardsService {
-    // proximity in miles
     private static final double STATUTE_MILES_PER_NAUTICAL_MILE = 1.15077945;
-    private int proximityBuffer = 4500;
-    private int attractionProximityRange = 200;
+    private int proximityBuffer = 5000;
     private final TripPricer tripPricer = new TripPricer();
     private final GpsUtil gpsUtil = new GpsUtil();
     private final RewardCentral rewardsCentral = new RewardCentral();
-    private Logger logger = LoggerFactory.getLogger(RewardsService.class);
     private static final String tripPricerApiKey = "test-server-api-key";
 
     @Autowired
@@ -53,10 +47,8 @@ public class RewardsService {
         return user.getUserRewards();
         }
 
-    public List<Provider> getTripDeals(String userName){
-        userDatabase.initializeUserDatabase();
-        User user = userDatabase.getUser(userName);
-        int cumulatativeRewardPoints = this.calculateRewards(user).stream().mapToInt(i -> i.getRewardPoints()).sum();
+    public List<Provider> getTripDeals(User user){
+        int cumulatativeRewardPoints = this.calculateRewards(user).parallelStream().mapToInt(i -> i.getRewardPoints()).sum();
         List<Provider> providers = tripPricer.getPrice(tripPricerApiKey, user.getUserId(),
                 user.getUserPreferences().getNumberOfAdults(), user.getUserPreferences().getNumberOfChildren(),
                 user.getUserPreferences().getTripDuration(), cumulatativeRewardPoints);
@@ -64,11 +56,11 @@ public class RewardsService {
         return providers;
     }
 
-    private int getRewardPoints(Attraction attraction, User user) {
+    public int getRewardPoints(Attraction attraction, User user) {
         return rewardsCentral.getAttractionRewardPoints(attraction.attractionId, user.getUserId());
     }
 
-    private boolean nearAttraction(VisitedLocation visitedLocation, Attraction attraction) {
+    public boolean nearAttraction(VisitedLocation visitedLocation, Attraction attraction) {
         boolean res = false;
         double distance = getDistance(attraction, visitedLocation.location);
          if(distance < proximityBuffer){

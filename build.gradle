@@ -4,7 +4,7 @@ plugins {
 	id 'java'
 }
 
-group = 'com.tripmaster'
+group = 'com.tripmaster.rewards'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '1.8'
 targetCompatibility = 1.8
@@ -26,6 +26,7 @@ apply plugin: "jacoco"
 dependencies {
 	implementation group: 'org.springframework.cloud', name: 'spring-cloud-starter-openfeign', version: '3.0.1'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.junit.jupiter:junit-jupiter:5.7.0'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
@@ -36,31 +37,35 @@ dependencies {
 	implementation(name:'gpsUtil', ext:'jar')
 	testImplementation("junit:junit")
 	testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '2.1.6.RELEASE'
+	implementation 'org.apache.maven.plugins:maven-surefire-plugin:2.21.0'
 }
 
 jacoco {
-	toolVersion = "0.8.4"
+	toolVersion = "0.8.7"
 }
 
-jacocoTestReport {
-	reports {
-		xml.enabled true
-		csv.enabled false
-		html.destination file("${buildDir}/jacocoHtml")
-	}
-}
+test {
+	useJUnitPlatform()
+	finalizedBy jacocoTestReport // End the test task by doing a jacoco report
 
-test.finalizedBy jacocoTestReport
-check.dependsOn jacocoTestCoverageVerification
+	jacocoTestReport {
+		dependsOn test // Tests are required to run before generating the report
+		finalizedBy jacocoTestCoverageVerification // End with a jacoco code coverage verification
 
-jacocoTestCoverageVerification {
-	violationRules {
-		rule {
-			limit {
-				counter = 'LINE'
-				value = 'COVEREDRATIO'
-				minimum = 0.5
-			}
+		reports {
+			xml.enabled true
+			csv.enabled false
+			html.enabled true
+			html.destination file("build/reports/jacocoHtml")
+		}
+		afterEvaluate {
+			getClassDirectories().setFrom(classDirectories.files.collect {
+				fileTree(dir: it,
+						exclude: [
+								'**/user/*.class',
+						]
+				)
+			})
 		}
 	}
 }
